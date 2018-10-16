@@ -1,11 +1,11 @@
 {
-  "name": "FireArmor",
-  "version": "0.1.0",
-  "title": "Fire Armor",
+  "name": "raw-materials",
+  "version": "0.1.1",
+  "title": "Raw Materials",
   "author": "Me",
   "contact": "",
   "homepage": "",
   "factorio_version": "0.16",
   "dependencies": ["base >= 0.16"],
-  "description": "This mod adds fire armor that leaves behind damaging fire"
+  "description": "This mod should show all raw materials required for all items."
 }

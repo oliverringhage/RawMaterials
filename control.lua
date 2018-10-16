@@ -1,6 +1,20 @@
 -- control.lua
 
 
+--[[
+Todo:
+  Check if we can get list of materials needed for specific item.
+
+]]
+
+function global_init()
+  global.config = {}
+  global["config-tmp"] = {}
+  global.storage = {}
+  global.storage_index = {}
+end
+
+
 function gui_init(player)
   local flow = mod_gui.get_button_flow(player)
   if not flow.upgrade_planner_config_button then
@@ -79,5 +93,56 @@ function gui_open_my_frame(player)
       tooltip = tooltip
     }
   end
+
+  frame.add{
+    type = "button",
+    name = "save_button",
+    tooltip = "Save",
+    caption = "Save"
+    }
   player.opened = frame
 end
+
+script.on_event(defines.events.on_gui_click, function(event)
+
+  local element = event.element
+  local name = element.name
+  local player = game.players[event.player_index]
+  if(name == "save_button") then
+    player.insert("iron-plate")
+    game.print("saving")
+    -- next step, loop over all elements
+    -- It goes from left to right.
+    local children = element.parent.children
+    game.print(children[2].type .. " " .. children[2].name .. " " .. " grandchild " .. children[2].children[1].name .. " type: " .. children[2].children[1].type)
+    if(children[2].children[1].elem_value ~= nil) then
+      game.print("elem type: " .. children[2].children[1].elem_type .. " elem value: " .. children[2].children[1].elem_value)
+    else
+      game.print("elem type: " .. children[2].children[1].elem_type .. " elem value: nil")
+    end
+    for k, child in pairs(children) do
+      game.print(#child.children_names)
+      if #child.children_names > 0 then
+        for i = 1, #child.children_names do
+          --         child.children[3].elem_value.get_recipe().ingredients[1]
+          if(child.children[i].type == "choose-elem-button") then
+            game.print("for the item " .. child.children[i].elem_value .. " we need " .. player.force.recipes[child.children[i].elem_value].ingredients[1].name)
+
+            --game.print(player.force.recipes[child.children[i].elem_value].name)
+            --game.print("this children is a choose-elem-button and has the elem value of: " .. child.children[i].elem_value)
+
+            --player.insert(child.children[i].elem_value)
+          elseif child.children[i].type == "textfield" then
+            game.print("this children is a text field and has the value of: " .. child.children[i].text)
+          end
+          game.print("forigrandcihld.type: " .. child.children[i].type)
+        end
+        for key, grandchild in pairs(child.children) do
+          game.print("grandchild.type: " .. grandchild.type)
+        end
+      end
+      game.print(child.type .. " " .. " " .. child.name)
+    end
+    return
+  end
+end)
