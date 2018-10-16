@@ -103,12 +103,91 @@ function gui_open_my_frame(player)
   player.opened = frame
 end
 
-script.on_event(defines.events.on_gui_click, function(event)
 
+function findIronPlatesRecursiveRecipe(recipe, number)
+  game.print("Checking recipe " .. recipe.name)
+  if recipe.name == "iron-plate" then
+    game.print("returning " .. number)
+    return number
+  end
+
+  for i = 1, #recipe.ingredients do
+    game.print("entering for loop")
+    if(recipe.ingredients[i].name == "iron-plate") then -- If it is a iron-plate, we should be done?
+      game.print("this ingredient is an  iron-plate and number wnet form  " .. number .. " and is: " .. number + recipe.ingredients[i].amount)
+      number = number + recipe.ingredients[i].amount
+      return number
+    else -- if it is not a iron-plate, it has to be a recipe??
+      local newRecipe = player.force.recipes[recipe.ingredients[i].name]
+      game.print("NOT iron-plate, redo everything")
+      findIronPlatesRecursiveRecipe(newRecipe, number)
+    end
+  end
+end
+
+function findStuff(recipe, player)
+  local ingredients = {}
+  ingredients["iron-plate"] = 0
+  ingredients["copper-plate"] = 0
+  ingredients["stone"] = 0
+  ingredients["coal"] = 0
+  ingredients["other"] = 0
+  for k, ingredient in pairs(recipe.ingredients) do
+    if ingredient.name == "iron-plate" then ingredients["iron-plate"] = ingredients["iron-plate"] + ingredient.amount
+    elseif ingredient.name == "copper-plate" then ingredients["copper-plate"] = ingredients["copper-plate"] + ingredient.amount
+    elseif ingredient.name == "stone" then ingredients["stone"] = ingredients["stone"] + ingredient.amount
+    elseif ingredient.name == "coal" then ingredients["coal"] = ingredients["coal"] + ingredient.amount
+    else
+      ingredients["other"] = ingredients["other"] + 1
+      findStuff(player.force.recipes[ingredient.name], player)
+    end
+  end
+  game.print("checking: " .. recipe.name)
+  game.print("iron: " .. ingredients["iron-plate"])
+  game.print("copper: " .. ingredients["copper-plate"])
+  game.print("stone: " .. ingredients["stone"])
+  game.print("coal: " .. ingredients["coal"])
+  game.print("other: " .. ingredients["other"])
+  return ingredients
+end
+
+
+script.on_event(defines.events.on_gui_click, function(event)
   local element = event.element
   local name = element.name
   local player = game.players[event.player_index]
+  local recipeToCheck = "inserter"
   if(name == "save_button") then
+    local ingredients = findStuff(player.force.recipes[recipeToCheck], player)
+    --game.print("totalnumber of plates: " .. findIronPlatesRecursiveRecipe(player.force.recipes["inserter"], 0))
+    --findIronPlatesRecursiveRecipe(player.force.recipes["iron-gear-wheel"], 0)
+  end
+
+  if(name == "saveeee_button")then
+    local totalIron = 0
+    local totalCopper = 0
+
+    local ingredients = player.force.recipes["inserter"].ingredients
+    game.print("For Inserter we need: ")
+    for i = 1, #ingredients do
+        local thisIngredient = ingredients[i]
+        game.print(thisIngredient.amount .. " " .. thisIngredient.name)
+        if thisIngredient.name == "iron-plate" then
+          totalIron = totalIron + thisIngredient.amount
+        elseif thisIngredient.name == "copper-plate" then
+          totalCopper = totalCopper + thisIngredient.amount
+        else
+          -- keep going
+          game.print("This item " .. thisIngredient.name .. " is not a Iron plate NOR copper plate, so we should do this again." )
+        end
+        -- If this is not a iron-plate OR a copper-plate, continue?
+    end
+  --  game.print(player.force.recipes[child.children[i].elem_value].ingredients[j].amount .. " " .. player.force.recipes[child.children[i].elem_value].ingredients[j].name)
+
+  end
+
+
+  if(name == "saveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee_button") then
     player.insert("iron-plate")
     game.print("saving")
     -- next step, loop over all elements
@@ -126,8 +205,12 @@ script.on_event(defines.events.on_gui_click, function(event)
         for i = 1, #child.children_names do
           --         child.children[3].elem_value.get_recipe().ingredients[1]
           if(child.children[i].type == "choose-elem-button") then
-            game.print("for the item " .. child.children[i].elem_value .. " we need " .. player.force.recipes[child.children[i].elem_value].ingredients[1].name)
-
+            --game.print("for the item " .. child.children[i].elem_value .. " we need " .. player.force.recipes[child.children[i].elem_value].ingredients[1].name)
+            game.print("for the item " .. child.children[i].elem_value .. " we need... ")
+            game.print("number of ingredients: ".. #player.force.recipes[child.children[i].elem_value].ingredients)
+            for j = 1, #player.force.recipes[child.children[i].elem_value].ingredients do
+              game.print(player.force.recipes[child.children[i].elem_value].ingredients[j].amount .. " " .. player.force.recipes[child.children[i].elem_value].ingredients[j].name)
+            end
             --game.print(player.force.recipes[child.children[i].elem_value].name)
             --game.print("this children is a choose-elem-button and has the elem value of: " .. child.children[i].elem_value)
 
