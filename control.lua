@@ -1,10 +1,9 @@
 -- control.lua
 
-
 --[[
-Todo:
-  Check if we can get list of materials needed for specific item.
-
+  TODO: Apparently recipe for all oil stuff (Crude oil, heavy oil) is the recipies used in Oil Refineries, i.e.
+        Basic Oil Processing etc etc. So when we have a oil item, we have to check that recipe for that item and do
+        calculations based upon that.
 ]]
 
 function global_init()
@@ -13,7 +12,6 @@ function global_init()
   global.storage = {}
   global.storage_index = {}
 end
-
 
 function gui_init(player)
   local flow = mod_gui.get_button_flow(player)
@@ -104,113 +102,41 @@ function gui_open_my_frame(player)
 end
 
 
-function findIronPlatesRecursiveRecipe(recipe, number)
-  game.print("Checking recipe " .. recipe.name)
-  if recipe.name == "iron-plate" then
-    game.print("returning " .. number)
-    return number
-  end
-
-  for i = 1, #recipe.ingredients do
-    game.print("entering for loop")
-    if(recipe.ingredients[i].name == "iron-plate") then -- If it is a iron-plate, we should be done?
-      game.print("this ingredient is an  iron-plate and number wnet form  " .. number .. " and is: " .. number + recipe.ingredients[i].amount)
-      number = number + recipe.ingredients[i].amount
-      return number
-    else -- if it is not a iron-plate, it has to be a recipe??
-      local newRecipe = player.force.recipes[recipe.ingredients[i].name]
-      game.print("NOT iron-plate, redo everything")
-      findIronPlatesRecursiveRecipe(newRecipe, number)
-    end
-  end
-end
-
-function findStuff(recipe, player)
-  local ingredients = {}
-  ingredients["iron-plate"] = 0
-  ingredients["copper-plate"] = 0
-  ingredients["stone"] = 0
-  ingredients["coal"] = 0
-  ingredients["other"] = 0
-  for k, ingredient in pairs(recipe.ingredients) do
-    if ingredient.name == "iron-plate" then ingredients["iron-plate"] = ingredients["iron-plate"] + ingredient.amount
-    elseif ingredient.name == "copper-plate" then ingredients["copper-plate"] = ingredients["copper-plate"] + ingredient.amount
-    elseif ingredient.name == "stone" then ingredients["stone"] = ingredients["stone"] + ingredient.amount
-    elseif ingredient.name == "coal" then ingredients["coal"] = ingredients["coal"] + ingredient.amount
-    else
-      ingredients["other"] = ingredients["other"] + 1
-      findStuff(player.force.recipes[ingredient.name], player)
-    end
-  end
-  game.print("checking: " .. recipe.name)
-  game.print("iron: "  .. ingredients["iron-plate"])
-  game.print("copper: " .. ingredients["copper-plate"])
-  game.print("stone: " .. ingredients["stone"])
-  game.print("coal: " .. ingredients["coal"])
-  game.print("other: " .. ingredients["other"])
-  return ingredients
-end
-
-
---function rec(recipe, nPlate, player)
-function rec(recipe, player, numberOf)
-  --game.print("started fun rec with recipe " .. recipe.name .. " and nPlate is: " .. nPlate)
-  game.print("started fun rec with recipe " .. recipe.name .. " which we need: " .. numberOf .. " of")
+-- This function takes a recipe as a string, player and a number and returns total raw materials needed for this recipe.
+function rec(recipe, player, numberOf, type)
   local platesInThis = 0
   for k, ing in pairs(recipe.ingredients) do
-    if ing.name == "iron-plate" then
-      --game.print("This is a iron-plate, adding " .. ing.amount .. " to nPlate, which is: " .. nPlate)
-      -- we are not taking into account how many of these we need, so for cargo wagon we need 10 IronGearWheels, not just 2.
-      --game.print("This is a iron-plate, adding " .. ing.amount )
-
-        game.print("This is a iron-plate ing.a: " .. ing.amount .. " numberOf: " .. numberOf .. ", adding " .. (ing.amount * numberOf))
-      --platesInThis = platesInThis + ing.amount
+    repeat
+      if ing.name == type then
         platesInThis = platesInThis + (ing.amount * numberOf)
-      --nPlate = nPlate + ing.amount
---      return nPlate
-    else
-      game.print("This ingredient: " .. ing.name .. " is another recipe, so we do this again.")
-        --if ing.name == "transport-belt" then
-          --local numberOfProducts = player.force.recipes[ing.name]
-          local numberOfProducts = 0
-          for k, product in pairs(player.force.recipes[ing.name].products) do
-            if product.name == ing.name then
-              numberOfProducts = numberOfProducts + product.amount
-              game.print("hello ".. product.name .. " " .. product.amount)
-              game.print("How many do we need? " .. ing.amount .. " how many does this produce? " .. product.amount .. " so we just take first/second: " .. ing.amount / product.amount)
-            end
+      elseif(allTypesContains(ing.name)) then do break end
+      else
+        local numberOfProducts = 0
+        for k, product in pairs(player.force.recipes[ing.name].products) do
+          if product.name == ing.name then
+            numberOfProducts = numberOfProducts + product.amount
           end
-          --platesInThis = platesInThis + ((ing.amount / numberOfProducts) * rec(player.force.recipes[ing.name], platesInThis, player))
-          --platesInThis = platesInThis + ((ing.amount / numberOfProducts) * rec(player.force.recipes[ing.name], player, ing.amount))
-      --else platesInThis = platesInThis + rec(player.force.recipes[ing.name], platesInThis, player)
-      --else
-        --platesInThis = platesInThis + rec(player.force.recipes[ing.name], player, ing.amount)
-        --[[
-        So the problem at the moment is for the fast-transport-belt, when we are calculating how many cogs we need
-        we are not taking into account that only 1 cog is needed, instead of 2. HMMMMMMM
-        ]]
-
-        game.print("ing.amount " .. ing.amount .. " numberofp: " .. numberOfProducts .. "numberOf: " .. numberOf)
-        --platesInThis = platesInThis + rec(player.force.recipes[ing.name], player, ing.amount)
-        --platesInThis = platesInThis + rec(player.force.recipes[ing.name], player, ing.amount/numberOfProducts)
-        platesInThis = platesInThis + (numberOf * rec(player.force.recipes[ing.name], player, ing.amount/numberOfProducts))
-
-      --end
-    end
+        end
+        platesInThis = platesInThis + (numberOf * rec(player.force.recipes[ing.name], player, ing.amount/numberOfProducts, type))
+      end
+    until true
   end
   return platesInThis
 end
 
-
-function recTwo(recipe, player)
-  if(recipe.name == "iron-plate") then return 1 end
-  local count = 0
-  for k, ingredient in pairs(recipe.ingredients) do
-    if ingredient.name == "iron-plate" then count = count + ingredient.amount
-    else count = count + (recTwo(player.force.recipes[ingredient.name], player))
-    end
+function allTypesContains(name)
+  for k, item in pairs(getAllTypes()) do
+    if(item == name) then return true end
   end
-  return count
+  return false
+end
+
+function getAllTypes()
+  local allTypes = {"raw-wood", "coal", "stone", "iron-plate", "copper-plate",
+                    "uranium-ore", "crude-oil", "heavy-oil", "light-oil",
+                    "lubricant", "petroleum-gas", "sulfuric-acid", "water",
+                    "steam", "iron-ore"}
+  return allTypes
 end
 
 script.on_event(defines.events.on_gui_click, function(event)
@@ -223,69 +149,39 @@ script.on_event(defines.events.on_gui_click, function(event)
 --  local recipeToCheck = "fast-transport-belt" -- 11.5
 --  local recipeToCheck = "underground-belt" -- 17.5
 --  local recipeToCheck = "fast-underground-belt" -- 97.5
-  local recipeToCheck = "cargo-wagon" -- 140
---    local recipeToCheck = "fluid-wagon" -- 153
-
-
+--  local recipeToCheck = "cargo-wagon" -- 140
+--  local recipeToCheck = "fluid-wagon" -- 153
+--    local recipeToCheck = "copper-cable"
+--    local recipeToCheck = "roboport"
+--    local recipeToCheck = "nuclear-reactor"
+--    local recipeToCheck = "express-splitter"
+--    local recipeToCheck = "logistic-chest-storage"
+--    local recipeToCheck = "assembling-machine-2"
+--    local recipeToCheck = "roboport"
+    local recipeToCheck = "nuclear-reactor"
   if(name == "save_button") then
-    --game.print("The total is: " .. rec(player.force.recipes[recipeToCheck], 0, player))
-    --game.print("The total is: " .. rec(player.force.recipes[recipeToCheck], player))
-    --  Transport Belt:     1 Iron Gear Wheel 1 Iron Plate
-    --  Iron Gear wheel     2 Iron Plate
-    -- Check recipe, if this recipe is a iron plate, tot+= recipe.amount and keep checking the rest
-    -- else,
-
-    game.print("total is: " .. rec(player.force.recipes[recipeToCheck], player, 1) .. " yihooo")
-
-    --[[
-    1  Check if this is a iron-plate. If Yes, goto 2, If no, goto 4
-    2  totalIron += recipe.amount Goto 3
-    3  Check next recipe, goto 1
-    4  Use this as recipe, go to 1
-
-    local totalIron = 0
-    for k, recipe in pairs(player.force.recipes[recipeToCheck].ingredients) do
-      if(recipe.name == "iron-plate") then totalIron = totalIron + recipe.amount
-      else
-        for k, rinr in pairs(player.force.recipes[recipe.name].ingredients) do
-          if(rinr.name == "iron-plate") then totalIron = totalIron + rinr.amount end
-        end
-      end
+    local allItems = {}
+    local allTypes = getAllTypes()
+    for i = 1, #allTypes do
+      allItems[allTypes[i]] = rec(player.force.recipes[recipeToCheck], player, 1, allTypes[i])
     end
-    game.print("totalIron is: " .. totalIron)
-]]
-
-    --game.print("stuff: " .. player.force.recipes["transport-belt"].products["transport-belt"].amount)
-
-    --local ingredients = findStuff(player.force.recipes[recipeToCheck], player)
-    --game.print("totalnumber of plates: " .. findIronPlatesRecursiveRecipe(player.force.recipes["inserter"], 0))
-    --findIronPlatesRecursiveRecipe(player.force.recipes["iron-gear-wheel"], 0)
-  end
-
-  if(name == "saveeee_button")then
-    local totalIron = 0
-    local totalCopper = 0
-
-    local ingredients = player.force.recipes["inserter"].ingredients
-    game.print("For Inserter we need: ")
-    for i = 1, #ingredients do
-        local thisIngredient = ingredients[i]
-        game.print(thisIngredient.amount .. " " .. thisIngredient.name)
-        if thisIngredient.name == "iron-plate" then
-          totalIron = totalIron + thisIngredient.amount
-        elseif thisIngredient.name == "copper-plate" then
-          totalCopper = totalCopper + thisIngredient.amount
-        else
-          -- keep going
-          game.print("This item " .. thisIngredient.name .. " is not a Iron plate NOR copper plate, so we should do this again." )
-        end
-        -- If this is not a iron-plate OR a copper-plate, continue?
+    for key, item in pairs(allItems) do
+      if(item ~= 0) then game.print(key .. " " .. item) end
     end
-  --  game.print(player.force.recipes[child.children[i].elem_value].ingredients[j].amount .. " " .. player.force.recipes[child.children[i].elem_value].ingredients[j].name)
 
+game.print("HERE COMES 100")
+    local allItems = {}
+    local allTypes = getAllTypes()
+    for i = 1, #allTypes do
+      allItems[allTypes[i]] = rec(player.force.recipes[recipeToCheck], player, 100, allTypes[i])
+    end
+    for key, item in pairs(allItems) do
+      if(item ~= 0) then game.print(key .. " " .. item) end
+    end
   end
 
 
+-- This has some ui-functionality, will check every box and print whatever is in them.
   if(name == "saveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee_button") then
     player.insert("iron-plate")
     game.print("saving")
