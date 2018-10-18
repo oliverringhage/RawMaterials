@@ -28,7 +28,6 @@ function gui_init(player)
   end
 end
 
-
 script.on_event("my-window", function(event)
   local player = game.players[event.player_index]
   gui_open_my_frame(player)
@@ -108,7 +107,7 @@ function rec(recipe, player, numberOf, type)
             numberOfProducts = numberOfProducts + product.amount
           end
         end
-        platesInThis = platesInThis + (numberOf * rec(player.force.recipes[ing.name], player, ing.amount/numberOfProducts, type))
+        platesInThis = platesInThis + (numberOf * rec(player.force.recipes[ing.name], player, ing.amount / numberOfProducts, type))
       end
     until true
   end
@@ -150,16 +149,23 @@ script.on_event(defines.events.on_gui_click, function(event)
     local allTypes = getAllTypes()
     for i = 1, #tableChildren do -- check if anything is in the windows, if not, discard them
       repeat
-        if tableChildren[i].type == "choose-elem-button" then
-          if tableChildren[i].elem_value == nil then do break end end -- if nothing selected
-          if tonumber(tableChildren[i+1].text) == nil then do break end end -- or nothing in text, skip this
+        local element = tableChildren[i]
+        local textBox = tableChildren[i+1]
+        if element.type == "choose-elem-button" then
+          if element.elem_value == nil then do break end end -- if nothing selected
+          if tonumber(textBox.text) == nil then do break end end -- or nothing in text, skip this
+          local numberOfProducts = 0
+          for k, product in pairs(player.force.recipes[element.elem_value].products) do
+            if product.name == element.elem_value then
+              numberOfProducts = numberOfProducts + product.amount
+            end
+          end
           for key, item in pairs(allItems) do
-            allItems[key] = allItems[key] + rec(player.force.recipes[tableChildren[i].elem_value], player, tableChildren[i+1].text, key)
+            allItems[key] = allItems[key] + rec(player.force.recipes[element.elem_value], player, tonumber(textBox.text) / numberOfProducts, key)
           end
         end
       until true
     end
-
     for key, item in pairs(allItems) do
       if(item ~= 0) then game.print(key .. " " .. item) end
     end
