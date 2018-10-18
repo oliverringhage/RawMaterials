@@ -29,14 +29,7 @@ function gui_init(player)
 end
 
 
-
-script.on_event(defines.events.on_gui_opened, function(event)
-  game.print("The player " .. event.player_index .. " opened a gui which has the type " ..
-      event.gui_type)
-end)
-
 script.on_event("my-window", function(event)
-  game.print("Pressed I?")
   local player = game.players[event.player_index]
   gui_open_my_frame(player)
 end)
@@ -66,17 +59,15 @@ function gui_open_my_frame(player)
 
   local ruleset_grid = frame.add{
     type = "table",
-    column_count = 6,
+    column_count = 4,
     name = "ruleset_grid",
     style = "slot_table"
   }
 
   local items = game.item_prototypes
-  for i = 1, 4 do
+  for i = 1, 16 do
     local sprite = nil
     local tooltip = nil
-    local from = "from"
-    tooltip = from
     local elem = ruleset_grid.add{
       type = "choose-elem-button",
       name = "from_" .. i,
@@ -150,49 +141,25 @@ end
 script.on_event(defines.events.on_gui_click, function(event)
   local element = event.element
   local name = element.name
-
   local player = game.players[event.player_index]
---  local recipeToCheck = "iron-gear-wheel" -- 2
---  local recipeToCheck = "transport-belt" -- 3
---  local recipeToCheck = "fast-transport-belt" -- 11.5
---  local recipeToCheck = "underground-belt" -- 17.5
---  local recipeToCheck = "fast-underground-belt" -- 97.5
---  local recipeToCheck = "cargo-wagon" -- 140
---  local recipeToCheck = "fluid-wagon" -- 153
---    local recipeToCheck = "copper-cable"
---    local recipeToCheck = "roboport"
---    local recipeToCheck = "nuclear-reactor"
---    local recipeToCheck = "express-splitter"
---    local recipeToCheck = "logistic-chest-storage"
---    local recipeToCheck = "assembling-machine-2"
---    local recipeToCheck = "roboport"
-    local recipeToCheck = "nuclear-reactor"
-  if(name == "saveee_button") then
-    local allItems = {}
-    local allTypes = getAllTypes()
-    for i = 1, #allTypes do
-      allItems[allTypes[i]] = rec(player.force.recipes[recipeToCheck], player, 1, allTypes[i])
-    end
-    for key, item in pairs(allItems) do
-      if(item ~= 0) then game.print(key .. " " .. item) end
-    end
-  end
-
-
   if(name == "save_button") then
-    game.print("saving")
     local children = element.parent.children
     local table = children[2] -- This is the table that we want that holds all elements needed
     local tableChildren = table.children
     local allItems = getAllItems()
     local allTypes = getAllTypes()
-    for i = 1, #tableChildren do
-      if tableChildren[i].type == "choose-elem-button" then
-        for key, item in pairs(allItems) do
-          allItems[key] = allItems[key] + rec(player.force.recipes[tableChildren[i].elem_value], player, tableChildren[i+1].text, key)
+    for i = 1, #tableChildren do -- check if anything is in the windows, if not, discard them
+      repeat
+        if tableChildren[i].type == "choose-elem-button" then
+          if tableChildren[i].elem_value == nil then do break end end -- if nothing selected
+          if tonumber(tableChildren[i+1].text) == nil then do break end end -- or nothing in text, skip this
+          for key, item in pairs(allItems) do
+            allItems[key] = allItems[key] + rec(player.force.recipes[tableChildren[i].elem_value], player, tableChildren[i+1].text, key)
+          end
         end
-      end
+      until true
     end
+
     for key, item in pairs(allItems) do
       if(item ~= 0) then game.print(key .. " " .. item) end
     end
