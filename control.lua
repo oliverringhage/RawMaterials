@@ -72,7 +72,7 @@ function gui_open_my_frame(player)
   }
 
   local items = game.item_prototypes
-  for i = 1, 16 do
+  for i = 1, 4 do
     local sprite = nil
     local tooltip = nil
     local from = "from"
@@ -139,6 +139,14 @@ function getAllTypes()
   return allTypes
 end
 
+function getAllItems()
+  local allItems = {}
+  for key, item in pairs(getAllTypes()) do
+    allItems[item] = 0
+  end
+  return allItems
+end
+
 script.on_event(defines.events.on_gui_click, function(event)
   local element = event.element
   local name = element.name
@@ -159,7 +167,7 @@ script.on_event(defines.events.on_gui_click, function(event)
 --    local recipeToCheck = "assembling-machine-2"
 --    local recipeToCheck = "roboport"
     local recipeToCheck = "nuclear-reactor"
-  if(name == "save_button") then
+  if(name == "saveee_button") then
     local allItems = {}
     local allTypes = getAllTypes()
     for i = 1, #allTypes do
@@ -168,59 +176,25 @@ script.on_event(defines.events.on_gui_click, function(event)
     for key, item in pairs(allItems) do
       if(item ~= 0) then game.print(key .. " " .. item) end
     end
+  end
 
-game.print("HERE COMES 100")
-    local allItems = {}
+
+  if(name == "save_button") then
+    game.print("saving")
+    local children = element.parent.children
+    local table = children[2] -- This is the table that we want that holds all elements needed
+    local tableChildren = table.children
+    local allItems = getAllItems()
     local allTypes = getAllTypes()
-    for i = 1, #allTypes do
-      allItems[allTypes[i]] = rec(player.force.recipes[recipeToCheck], player, 100, allTypes[i])
+    for i = 1, #tableChildren do
+      if tableChildren[i].type == "choose-elem-button" then
+        for key, item in pairs(allItems) do
+          allItems[key] = allItems[key] + rec(player.force.recipes[tableChildren[i].elem_value], player, tableChildren[i+1].text, key)
+        end
+      end
     end
     for key, item in pairs(allItems) do
       if(item ~= 0) then game.print(key .. " " .. item) end
     end
-  end
-
-
--- This has some ui-functionality, will check every box and print whatever is in them.
-  if(name == "saveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee_button") then
-    player.insert("iron-plate")
-    game.print("saving")
-    -- next step, loop over all elements
-    -- It goes from left to right.
-    local children = element.parent.children
-    game.print(children[2].type .. " " .. children[2].name .. " " .. " grandchild " .. children[2].children[1].name .. " type: " .. children[2].children[1].type)
-    if(children[2].children[1].elem_value ~= nil) then
-      game.print("elem type: " .. children[2].children[1].elem_type .. " elem value: " .. children[2].children[1].elem_value)
-    else
-      game.print("elem type: " .. children[2].children[1].elem_type .. " elem value: nil")
-    end
-    for k, child in pairs(children) do
-      game.print(#child.children_names)
-      if #child.children_names > 0 then
-        for i = 1, #child.children_names do
-          --         child.children[3].elem_value.get_recipe().ingredients[1]
-          if(child.children[i].type == "choose-elem-button") then
-            --game.print("for the item " .. child.children[i].elem_value .. " we need " .. player.force.recipes[child.children[i].elem_value].ingredients[1].name)
-            game.print("for the item " .. child.children[i].elem_value .. " we need... ")
-            game.print("number of ingredients: ".. #player.force.recipes[child.children[i].elem_value].ingredients)
-            for j = 1, #player.force.recipes[child.children[i].elem_value].ingredients do
-              game.print(player.force.recipes[child.children[i].elem_value].ingredients[j].amount .. " " .. player.force.recipes[child.children[i].elem_value].ingredients[j].name)
-            end
-            --game.print(player.force.recipes[child.children[i].elem_value].name)
-            --game.print("this children is a choose-elem-button and has the elem value of: " .. child.children[i].elem_value)
-
-            --player.insert(child.children[i].elem_value)
-          elseif child.children[i].type == "textfield" then
-            game.print("this children is a text field and has the value of: " .. child.children[i].text)
-          end
-          game.print("forigrandcihld.type: " .. child.children[i].type)
-        end
-        for key, grandchild in pairs(child.children) do
-          game.print("grandchild.type: " .. grandchild.type)
-        end
-      end
-      game.print(child.type .. " " .. " " .. child.name)
-    end
-    return
   end
 end)
