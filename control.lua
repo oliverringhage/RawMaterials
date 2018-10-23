@@ -162,7 +162,6 @@ script.on_event(defines.events.on_gui_click, function(event)
             end
           end
           for key, item in pairs(allItems) do
-            local status, err = pcall(function () error({code=121}) end)
             allItems[key] = allItems[key] + rec(player.force.recipes[element.elem_value], player, tonumber(textBox.text) / numberOfProducts, key)
           end
         end
