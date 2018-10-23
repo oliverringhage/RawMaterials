@@ -6,7 +6,7 @@ require("mod-gui")
 ]]
 
 function global_init()
-  
+
 end
 
 function gui_init(player)
@@ -98,13 +98,18 @@ function rec(recipe, player, numberOf, type)
       elseif(allTypesContains(ing.name)) then do break end
       else
         local numberOfProducts = 0
-        for k, product in pairs(player.force.recipes[ing.name].products) do
-          if product.name == ing.name then
-            numberOfProducts = numberOfProducts + product.amount
+        if(player.force.recipes[ing.name]) == nil then
+          game.print("Some unknown material, results are probably wrong")
+          return 0
+        else
+            for k, product in pairs(player.force.recipes[ing.name].products) do
+              if product.name == ing.name then
+                numberOfProducts = numberOfProducts + product.amount
+              end
+            end
+            platesInThis = platesInThis + (numberOf * rec(player.force.recipes[ing.name], player, ing.amount / numberOfProducts, type))
           end
         end
-        platesInThis = platesInThis + (numberOf * rec(player.force.recipes[ing.name], player, ing.amount / numberOfProducts, type))
-      end
     until true
   end
   return platesInThis
@@ -157,6 +162,7 @@ script.on_event(defines.events.on_gui_click, function(event)
             end
           end
           for key, item in pairs(allItems) do
+            local status, err = pcall(function () error({code=121}) end)
             allItems[key] = allItems[key] + rec(player.force.recipes[element.elem_value], player, tonumber(textBox.text) / numberOfProducts, key)
           end
         end

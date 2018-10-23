@@ -1,6 +1,5 @@
 --data.lua
 
-require("prototypes.item")
 
 
 data:extend{
