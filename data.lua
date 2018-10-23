@@ -7,6 +7,6 @@ data:extend{
   {
     type = "custom-input",
     name = "my-window",
-    key_sequence = "I",
+    key_sequence = "J",
   },
 }

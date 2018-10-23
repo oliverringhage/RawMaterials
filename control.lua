@@ -1,5 +1,4 @@
--- control.lua
-
+require("mod-gui")
 --[[
   TODO: Apparently recipe for all oil stuff (Crude oil, heavy oil) is the recipies used in Oil Refineries, i.e.
         Basic Oil Processing etc etc. So when we have a oil item, we have to check that recipe for that item and do
@@ -7,10 +6,7 @@
 ]]
 
 function global_init()
-  global.config = {}
-  global["config-tmp"] = {}
-  global.storage = {}
-  global.storage_index = {}
+  
 end
 
 function gui_init(player)

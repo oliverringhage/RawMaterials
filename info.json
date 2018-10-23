@@ -2,10 +2,10 @@
   "name": "raw-materials",
   "version": "0.1.1",
   "title": "Raw Materials",
-  "author": "Me",
-  "contact": "",
-  "homepage": "",
+  "author": "Oliver Ringhage",
+  "contact": "https://github.com/oliverringhage",
+  "homepage": "https://github.com/oliverringhage",
   "factorio_version": "0.16",
   "dependencies": ["base >= 0.16"],
-  "description": "This mod should show all raw materials required for all items."
+  "description": "This mod allows you to calculate all raw materials used for a number of items."
 }
